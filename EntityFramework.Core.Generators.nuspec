@@ -1,0 +1,22 @@
+<?xml version="1.0"?>
+<package >
+  <metadata>
+    <id>EntityFramework.Core.Generators</id>
+    <version>1.0.0</version>
+    <authors>Johan Sköldekrans, Jimmy Engström</authors>
+    <owners>Johan Sköldekrans, Jimmy Engström</owners>
+    
+    <projectUrl>https://github.com/EngstromJimmy/EntityFramework.Core.Generators</projectUrl>
+    <iconUrl>icon.png</iconUrl>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <description>Johan Sköldekrans, Jimmy Engström</description>
+    <releaseNotes>Initial release</releaseNotes>
+    <copyright>Copyright 2019</copyright>
+    <tags>Entity Framework,Stored Procedures,Views</tags>
+
+    <contentFiles>
+    </contentFiles>
+  </metadata>
+
+ 
+</package>
