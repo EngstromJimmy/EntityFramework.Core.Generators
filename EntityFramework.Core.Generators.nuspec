@@ -7,7 +7,7 @@
     <owners>Johan Sköldekrans, Jimmy Engström</owners>
     
     <projectUrl>https://github.com/EngstromJimmy/EntityFramework.Core.Generators</projectUrl>
-    <iconUrl>icon.png</iconUrl>
+    <iconUrl>https://raw.githubusercontent.com/EngstromJimmy/EntityFramework.Core.Generators/master/Icon.png</iconUrl>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <description>Johan Sköldekrans, Jimmy Engström</description>
     <releaseNotes>Initial release</releaseNotes>
