@@ -16,7 +16,7 @@ string namespaceString = basenamespace + ".Data";\
 string modelnamespaceString = basenamespace + ".Models";
 
 --Name of the EF.Core context to be generated\
-string contextName= "PenserCrmDbContext";\
+string contextName= "YourCompanyDbContext";\
 string modelName= "Models";\
 bool generateContextConstructor=true;
 
