@@ -135,7 +135,7 @@ foreach(var col in procedure.First().ResultSet)
 
 <#manager.StartNewFile("../" + contextName + ".generated.cs");#>
 using Microsoft.EntityFrameworkCore;
-using Penser.DataLayer.Data.Models;
+using <#=namespaceString#>.Data.Models;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Collections.Generic;
@@ -256,7 +256,7 @@ foreach(var view in views)
 
 		manager.StartNewFile("../../" + modelName + "/" + singularName + ".generated.cs");
 		#>
-using Penser.DataLayer.Data.Models;
+using <#=namespaceString#>.Data.Models;
 
 namespace <#=modelnamespaceString#>
 {
@@ -279,7 +279,7 @@ foreach(var procedure in procedures.Where(x => x.First().ResultSet.Where(rs => r
 
 		manager.StartNewFile("../../" + modelName + "/" + singularName + "Result.generated.cs");
 		#>
-using Penser.DataLayer.Data.Models;
+using <#=namespaceString#>.Data.Models;
 
 namespace <#=modelnamespaceString#>
 {
@@ -305,7 +305,7 @@ namespace <#=automappernamespace#>
     public class <#=schemaName#>DefaultAutoMapperProfileConfiguration : Profile
     {
 
-		public <#=schemaName#>DefaultAutoMapperProfileConfiguration() : this("PenserDataLayerDefaultAutoMapperProfile")
+		public <#=schemaName#>DefaultAutoMapperProfileConfiguration() : this("<#=schemaName#>DefaultAutoMapperProfile")
         {}
 
 		private <#=schemaName#>DefaultAutoMapperProfileConfiguration(string profileName) : base(profileName)
