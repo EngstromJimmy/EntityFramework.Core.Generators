@@ -11,7 +11,7 @@
 <#@include file="includes/SqlViewHelper.ttinclude"#>
 <#@include file="includes/SqlProcedureHelper.ttinclude"#>
 <#@include file="includes/EntityFrameworkCorePluralize.ttinclude"#>
-<#@include file="_Settings.ttinclude"#>
+<#@include file="Settings.ttinclude"#>
 <#@ assembly name="System.Configuration" #>
 <#@ import namespace="System.Configuration" #>
 
