@@ -1,0 +1,17 @@
+﻿<#	//===== Settings =====
+	string schemaName="<Schema to get stored procedures and views from>";
+	string connectionString = "<Connectionstring>";
+	string basenamespace = "<BaseNamespace for you project>";
+	string namespaceString = basenamespace + ".Data";
+	string modelnamespaceString = basenamespace + ".Models";
+	
+	string contextName= "<ContextName>";
+	string modelName= "Models";
+
+	//===== Automapper setting =====
+	//This will generate a class inheriting from the database model class and also generate default profiles for Automapper
+	bool generateAutoMapperDefaultProfile=true;
+	string automappernamespace = basenamespace + ".Profiles";
+	
+	bool generateContextConstructor=true;
+#>

@@ -2,10 +2,9 @@
 <package >
   <metadata>
     <id>EntityFramework.Core.Generators</id>
-    <version>1.0.0</version>
+    <version>0.0.17</version>
     <authors>Johan Sköldekrans, Jimmy Engström</authors>
     <owners>Johan Sköldekrans, Jimmy Engström</owners>
-    
     <projectUrl>https://github.com/EngstromJimmy/EntityFramework.Core.Generators</projectUrl>
     <iconUrl>https://raw.githubusercontent.com/EngstromJimmy/EntityFramework.Core.Generators/master/Icon.png</iconUrl>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
@@ -13,10 +12,25 @@
     <releaseNotes>Initial release</releaseNotes>
     <copyright>Copyright 2019</copyright>
     <tags>Entity Framework,Stored Procedures,Views</tags>
-
     <contentFiles>
+      <files include="generators/test.tt" buildAction="content" copyToOutput="true" flatten="true"  />
+      <files include="generators/_GenerateModels.tt" buildAction="content" copyToOutput="true" flatten="true"  />
+      <files include="generators/_Settings.ttinclude" buildAction="content" copyToOutput="true" flatten="true"  />
+      <files include="generators/include/EntityFrameworkCorePluralize.ttinclude" buildAction="content" copyToOutput="true" flatten="true"  />
+      <files include="generators/include/MultipleOutputHelper.ttinclude" buildAction="content" copyToOutput="true" flatten="true"  />
+      <files include="generators/include/SqlProcedureHelper.ttinclude" buildAction="content" copyToOutput="true" flatten="true"  />
+      <files include="generators/include/SqlViewHelper.ttinclude" buildAction="content" copyToOutput="true" flatten="true"  />
+      <files include="generators/include/StringHelper.ttinclude" buildAction="content" copyToOutput="true" flatten="true"  />
     </contentFiles>
   </metadata>
-
- 
+  <files>
+    <file src="contentFiles/generators/test.tt" target="contentFiles/any/any/Generator"></file>
+    <file src="contentFiles/generators/_GenerateModels.tt" target="contentFiles/any/any/Generator"></file>
+    <file src="contentFiles/generators/_Settings.ttinclude" target="contentFiles/any/any/Generator"></file>
+    <file src="contentFiles/generators/includes/EntityFrameworkCorePluralize.ttinclude" target="contentFiles/any/any/Generator/Includes"></file>
+    <file src="contentFiles/generators/includes/MultipleOutputHelper.ttinclude" target="contentFiles/any/any/Generator/Includes"></file>
+    <file src="contentFiles/generators/includes/SqlProcedureHelper.ttinclude" target="contentFiles/any/any/Generator/Includes"></file>
+    <file src="contentFiles/generators/includes/SqlViewHelper.ttinclude" target="contentFiles/any/any/Generator/Includes"></file>
+    <file src="contentFiles/generators/includes/StringHelper.ttinclude" target="contentFiles/any/any/Generator/Includes"></file>    
+  </files>
 </package>

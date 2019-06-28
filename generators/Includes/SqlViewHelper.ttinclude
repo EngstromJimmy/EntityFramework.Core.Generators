@@ -1,0 +1,87 @@
+﻿<#+
+public static IEnumerable<IGrouping<string,DatabaseView>> GetViews(string connectionString,string schema)
+{
+	string sql=@"select 
+	case DATA_TYPE
+		when 'nvarchar' then 'string'
+		when 'int' then 'int'
+		when 'bit' then 'bool'
+		when 'date' then 'DateTime'
+		when 'bigint' then 'long'
+		when 'smallint' then 'Int16'
+		when 'time' then 'TimeSpan'
+		when 'smalldatetime' then 'DateTime'
+		when 'datetime' then 'DateTime'
+		when 'varchar' then 'string'
+		when 'nchar' then 'string'
+		when 'char' then 'string'
+		when 'numeric' then 'decimal'
+		when 'varbinary' then 'byte[]'
+		when 'uniqueidentifier' then 'Guid'
+		else DATA_TYPE
+	end
+	+
+	case IS_NULLABLE
+		when 'NO' then ''
+		when 'YES' then
+			case DATA_TYPE
+				when 'nvarchar' then ''
+				when 'varchar' then ''
+				when 'nchar' then ''
+				when 'char' then ''
+				when 'varbinary' then ''
+				else '?'
+			end
+	end
+	as [type],
+	table_name as tablename,
+	table_schema,
+	column_name,
+	character_maximum_length,
+	CASE WHEN indexes.indexcount > 0 THEN CAST(1 AS BIT) ELSE CAST(0 AS BIT) END AS HasIndex
+    from information_schema.columns i
+    CROSS APPLY
+        (SELECT table_schema + '.' + table_name) AS strings(fulltable)
+    OUTER APPLY
+    (
+        SELECT COUNT(*) FROM sys.indexes  WHERE object_id = OBJECT_ID(strings.fulltable)
+    ) AS indexes(indexcount)
+	where table_schema='" + schema + "'"
+	+"order by ordinal_position";
+
+    List<DatabaseView> views = new List<DatabaseView>();
+    using (SqlConnection sqlConnection = new SqlConnection(connectionString))
+    {
+        SqlCommand command = new SqlCommand(sql, sqlConnection);
+        sqlConnection.Open();
+
+        var reader = command.ExecuteReader();
+        while (reader.Read())
+        {
+            var view = new DatabaseView();
+            view.Type=reader.GetString(0);
+			view.Schema = reader.GetString(2);
+            view.ViewName = reader.GetString(1);
+            view.Name = reader.GetString(3);
+			if(!reader.IsDBNull(4))
+			{
+				view.MaxCharacterLength=reader.GetInt32(4);
+			}
+			view.HasIndex=reader.GetBoolean(5);
+            views.Add(view);
+        }
+    }
+
+    return views.GroupBy(t => t.ViewName);
+}
+public class DatabaseView
+{
+    public string Name { get; set; }
+    public string ViewName { get; set; }
+    public string Schema { get; set; }
+	public string Type { get; set; }
+	public int MaxCharacterLength { get; set; }
+	public bool HasIndex { get; set; }
+}
+
+#>

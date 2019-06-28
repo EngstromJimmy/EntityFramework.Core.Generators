@@ -1,0 +1,336 @@
+﻿<#@ template language="C#" hostspecific="True"#>
+<#@ Assembly Name="System.Core, Version=4.0.0.0, Culture=neutral" #>
+<#@ Assembly Name="Microsoft.CSharp, Version=4.0.0.0, Culture=neutral" #>
+<#@ import namespace="System.Linq" #>
+<#@ import namespace="System.Text" #>
+<#@ import namespace="System.Collections.Generic" #>
+<#@ include file="MultipleOutputHelper.ttinclude"#>
+<#@ assembly name="System.Data" #>
+<#@ import namespace="System.Data.SqlClient" #>
+<#@include file="includes/StringHelper.ttinclude"#>
+<#@include file="includes/SqlViewHelper.ttinclude"#>
+<#@include file="includes/SqlProcedureHelper.ttinclude"#>
+<#@include file="includes/EntityFrameworkCorePluralize.ttinclude"#>
+<#@include file="_Settings.ttinclude"#>
+<#@ assembly name="System.Configuration" #>
+<#@ import namespace="System.Configuration" #>
+
+<# var manager = Manager.Create(Host, GenerationEnvironment); #>
+<#	
+	EnglishPluralizationService pluralizationService = new EnglishPluralizationService();
+
+	
+	var views= GetViews(connectionString,schemaName);
+	foreach(var view in views)
+	{
+		string pluralName=pluralizationService.Pluralize(view.Key);
+		string singularName=pluralizationService.Singularize(view.Key);
+        
+		manager.StartNewFile("../" + modelName + "/" + singularName + "Model.generated.cs");
+		#>
+using System;
+using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+using System.Diagnostics.CodeAnalysis;
+using System.Text;
+
+namespace <#=namespaceString#>.<#=modelName#>
+{
+    [ExcludeFromCodeCoverage]
+    public partial class <#=singularName#>Model
+    {
+
+<#
+bool first=true;
+foreach(var col in view)									
+{
+	if(col.MaxCharacterLength>0)
+	{
+	#>
+		[MaxLength(<#=col.MaxCharacterLength#>)]
+<#
+	}
+
+	//We are assuming that the first column in the view is the primary key
+	if(first)
+	{					
+		first=false;
+#>
+		
+<#
+	}
+#>
+		public <#=col.Type#> <#=col.Name#>{get;set;}
+<#
+}
+	#>
+    }
+
+}
+
+<#
+								
+		manager.EndBlock();
+	}
+#>
+
+<#var procedures= GetProcedures(connectionString,schemaName);
+	foreach(var procedure in procedures.Where(x => x.First().ResultSet.Where(rs => rs.ErrorMessage == null).Count() != 0))
+	{
+		string pluralName=pluralizationService.Pluralize(procedure.Key);
+		string singularName=pluralizationService.Singularize(procedure.Key);
+
+		manager.StartNewFile("../" + modelName+ "/" + singularName + "ResultModel.generated.cs");
+		#>
+using System;
+using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+using System.Text;
+using System.Diagnostics.CodeAnalysis;
+
+namespace <#=namespaceString#>.<#=modelName#>
+{
+	[ExcludeFromCodeCoverage]
+    public partial class <#=singularName#>ResultModel
+    {
+
+<#
+
+bool first=true;
+foreach(var col in procedure.First().ResultSet)									
+{
+	if(col.MaxCharacterLength>0)
+	{
+	#>
+		[MaxLength(<#=col.MaxCharacterLength#>)]
+<#
+	}
+
+	//We are assuming that the first column in the view is the primary key
+	if(first)
+	{					
+		first=false;
+#>
+		
+<#
+	}
+#>
+		public <#=col.Type#> <#=col.Name#>{get;set;}
+<#
+}
+	#>
+    }
+
+}
+
+<#
+								
+		manager.EndBlock();
+	}
+#>
+
+
+
+<#manager.StartNewFile("../" + contextName + ".generated.cs");#>
+using Microsoft.EntityFrameworkCore;
+using Penser.DataLayer.Data.Models;
+using System.Linq;
+using System.Threading.Tasks;
+using System.Collections.Generic;
+using System.Data.SqlClient;
+using System.Data;
+using System.Data.SqlTypes;
+using System;
+namespace <#=namespaceString#>
+{
+    public partial class <#=contextName#> : DbContext 
+    {
+<#if (generateContextConstructor){#>
+		public <#=contextName#>(DbContextOptions<<#=contextName#>> options) : base(options)
+        {
+
+        }
+<#}#>
+		protected override void OnModelCreating(ModelBuilder modelBuilder)
+		{
+<#
+	foreach(var view in views)
+	{
+		string pluralName=pluralizationService.Pluralize(view.Key);
+		string singularName=pluralizationService.Singularize(view.Key);#>
+			modelBuilder.Query<<#=singularName#>Model>().ToView("<#=view.Key#>","<#=schemaName#>");
+<#}#>
+}
+
+
+<#foreach(var procedure in procedures)
+{
+		if (procedure.Any(x => x.ResultSet.Count(a => a.ErrorMessage == null) == 0))
+			{
+#>
+<# if (procedure.Any(p => p.IsOutput))
+												{#>
+		public async Task<int> <#=procedure.Key#>(<#=string.Join(", ", procedure.Where(x => !x.IsOutput).Select(x => x.Type + " " + FirstCharacterToLower(x.Name.Replace("@",""))))#>)
+<#}else{#>
+<#if (procedure.Any(x => x.ResultSet.Any(rs => rs.ErrorMessage != null)))
+{#>
+<#="#warning " + string.Join(" ",procedure.Select(x => x.ErrorMessage))#>
+<#}#>
+		public async Task <#=procedure.Key#>(<#=string.Join(", ", procedure.Select(x => x.Type + " " + FirstCharacterToLower(x.Name.Replace("@",""))))#>)
+<#}#>
+		{
+<# if (procedure.Any(p => p.IsOutput))
+{#>
+			var sqlparameters = new List<SqlParameter>();
+			
+<# foreach(var p in procedure)
+{#>
+<#if (p.IsOutput) {#>
+			   sqlparameters.Add(new SqlParameter("<#=p.Name#>", SqlDbType.Int) {Direction = ParameterDirection.Output});
+<#}else{#>
+			   sqlparameters.Add(new SqlParameter("<#=p.Name#>", <#=FirstCharacterToLower(p.Name.Replace("@",""))#> ?? <#=p.SqlDbType#>.Null));
+<#}#>
+<#}#>
+			
+<#}#>
+<# if (procedure.Any(p => p.IsOutput))
+{#>			 
+			await this.Database.ExecuteSqlCommandAsync("Exec <#=procedure.First().Schema#>.<#=procedure.Key#> <#=string.Join(", ", procedure.Select(x => x.Name + (x.IsOutput ? " OUTPUT" : "")))#>", sqlparameters);
+<#}else{#>
+			await this.Database.ExecuteSqlCommandAsync($@"Exec <#=procedure.First().Schema#>.<#=procedure.Key#> <#=string.Join(", ", procedure.Where(x => !x.IsOutput).Select(x => x.Name + "={" + FirstCharacterToLower(x.Name.Replace("@",""))+"}"))#>");		
+<#}#>			
+<# if (procedure.Any(p => p.IsOutput))
+{#>
+			var result = int.Parse(sqlparameters[<#=procedure.First(p => p.IsOutput).SortOrder-1#>].Value.ToString());
+			return result;
+<#}#>
+		}
+
+<#}
+		else
+{			
+		string pluralName=pluralizationService.Pluralize(procedure.Key);
+		string singularName=pluralizationService.Singularize(procedure.Key);
+#>
+		public async Task<List<<#=singularName#>ResultModel>> <#=procedure.Key#>(<#=string.Join(", ", procedure.Select(x => x.Type + " " + FirstCharacterToLower(x.Name.Replace("@",""))))#>)
+		{
+			return await this.<#=singularName#>Results.FromSql($@"Exec <#=procedure.First().Schema#>.<#=procedure.Key#> <#=string.Join(", ", procedure.Select(x => x.Name + "={" + FirstCharacterToLower(x.Name.Replace("@",""))+"}"))#>").ToListAsync();
+		}
+								
+<#}#>
+<#}#>
+<#foreach(var procedure in procedures.Where(x => x.First().ResultSet.Where(rs => rs.ErrorMessage == null).Count() != 0))
+{
+		string pluralName=pluralizationService.Pluralize(procedure.Key);
+		string singularName=pluralizationService.Singularize(procedure.Key);
+#>
+		public virtual DbQuery<<#=singularName#>ResultModel> <#=singularName#>Results { get; private set; }
+<#}#>
+
+<#foreach(var view in views)
+{
+string pluralName=pluralizationService.Pluralize(view.Key);
+string singularName=pluralizationService.Singularize(view.Key);
+
+#>
+		public virtual DbQuery<<#=singularName#>Model> <#=pluralName#> { get; private set; }
+<#if(view.First().HasIndex){#>
+		public IQueryable<<#=singularName#>Model> <#=view.Key#>NoExpand { get { return <#=pluralName#>.FromSql("Select * from <#=schemaName#>.<#=view.Key#> with (noexpand)"); } } 	
+<#}#>
+
+<#}#>
+
+    }
+}
+
+<#				manager.EndBlock();#>
+
+
+<#
+foreach(var view in views)
+	{
+		string pluralName=pluralizationService.Pluralize(view.Key);
+		string singularName=pluralizationService.Singularize(view.Key);
+
+		manager.StartNewFile("../../" + modelName + "/" + singularName + ".generated.cs");
+		#>
+using Penser.DataLayer.Data.Models;
+
+namespace <#=modelnamespaceString#>
+{
+    public partial class <#=singularName#> : <#=singularName#>Model
+    {
+	}
+}
+
+<#
+								
+		manager.EndBlock();
+	}
+#>
+
+<#
+foreach(var procedure in procedures.Where(x => x.First().ResultSet.Where(rs => rs.ErrorMessage == null).Count() != 0))
+	{
+		string pluralName=pluralizationService.Pluralize(procedure.Key);
+		string singularName=pluralizationService.Singularize(procedure.Key);
+
+		manager.StartNewFile("../../" + modelName + "/" + singularName + "Result.generated.cs");
+		#>
+using Penser.DataLayer.Data.Models;
+
+namespace <#=modelnamespaceString#>
+{
+    public partial class <#=singularName#>Result : <#=singularName#>ResultModel
+    {
+	}
+}
+
+<#
+								
+		manager.EndBlock();
+	}
+#>
+<#if (generateAutoMapperDefaultProfile){#>
+
+<#manager.StartNewFile("../../Profiles/DefaultProfile.generated.cs");#>
+using AutoMapper;
+using <#=modelnamespaceString#>;
+using <#=namespaceString#>.Models;
+
+namespace <#=automappernamespace#>
+{
+    public class <#=schemaName#>DefaultAutoMapperProfileConfiguration : Profile
+    {
+
+		public <#=schemaName#>DefaultAutoMapperProfileConfiguration() : this("PenserDataLayerDefaultAutoMapperProfile")
+        {}
+
+		private <#=schemaName#>DefaultAutoMapperProfileConfiguration(string profileName) : base(profileName)
+        {
+			///VIEWMAPPINGS
+<#
+	foreach(var view in views.OrderBy(o => o.Key))
+	{
+		string pluralName=pluralizationService.Pluralize(view.Key);
+		string singularName=pluralizationService.Singularize(view.Key);#>
+			CreateMap<<#=singularName#>Model, <#=singularName#>>();
+<#}#>
+			///PROCEDUREMAPPINGS
+<#foreach(var procedure in procedures.Where(x => x.First().ResultSet.Where(rs => rs.ErrorMessage == null).Count() != 0).OrderBy(o => o.Key))
+{
+		string pluralName=pluralizationService.Pluralize(procedure.Key);
+		string singularName=pluralizationService.Singularize(procedure.Key);
+#>
+			CreateMap<<#=singularName#>ResultModel, <#=singularName#>Result>();
+<#}#>
+		}
+    }
+}
+
+<#				manager.EndBlock();#>
+
+<#}#>
+<# manager.Process(true); #>

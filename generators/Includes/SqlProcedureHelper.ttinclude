@@ -1,0 +1,206 @@
+﻿<#+
+
+public static IEnumerable<IGrouping<string,DatabaseProcedure>> GetProcedures(string connectionString,string schema)
+{
+	string sql=@"SELECT
+	'Parameter_name' = pa.name,  
+    'Param_order'  = pa.parameter_id,
+	case type_name(pa.user_type_id)
+		when 'nvarchar' then 'string'
+		when 'int' then 'int'
+		when 'bit' then 'bool'
+		when 'date' then 'DateTime'
+		when 'time' then 'TimeSpan'
+		when 'bigint' then 'long'
+		when 'smalldatetime' then 'DateTime'
+		when 'datetime' then 'DateTime'
+		when 'varchar' then 'string'
+		when 'nchar' then 'string'
+		when 'char' then 'string'
+		when 'numeric' then 'decimal'
+		when 'smallint' then 'Int16'
+		when 'uniqueidentifier' then 'Guid'
+		else type_name(pa.user_type_id)
+	end
+	+
+	
+			case type_name(pa.user_type_id)
+				when 'nvarchar' then ''
+				when 'varchar' then ''
+				when 'nchar' then ''
+				when 'char' then ''
+				else '?'
+			end
+	as [type],
+	p.NAME AS procedurename,
+	s.NAME AS schemaname,
+	pa.is_output,
+	case type_name(pa.user_type_id)
+		when 'nvarchar' then 'SqlString'
+		when 'int' then 'SqlInt32'
+		when 'bit' then 'SqlBoolean'
+		when 'date' then 'SqlDateTime'
+		when 'smallint' then 'SqlInt16'
+		when 'bigint' then 'SqlInt64'
+		when 'smalldatetime' then 'SqlDateTime'
+		when 'datetime' then 'SqlDateTime'
+		when 'varchar' then 'SqlString'
+		when 'nchar' then 'SqlString'
+		when 'char' then 'SqlString'
+		when 'numeric' then 'SqlDecimal'
+		when 'decimal' then 'SqlDecimal'
+		else type_name(pa.user_type_id)
+	END AS SqlDbType
+FROM sys.procedures p
+INNER JOIN
+	sys.schemas s
+	ON s.schema_id = p.schema_id
+LEFT JOIN
+	sys.parameters pa
+	ON p.object_id = pa.object_id
+WHERE
+	p.type_desc = 'SQL_STORED_PROCEDURE'
+	AND s.name = '" + schema + "'"
++"ORDER BY p.NAME, pa.parameter_id";
+
+    List<DatabaseProcedure> procedures = new List<DatabaseProcedure>();
+    using (SqlConnection sqlConnection = new SqlConnection(connectionString))
+    {
+        SqlCommand command = new SqlCommand(sql, sqlConnection);
+        sqlConnection.Open();
+
+        var reader = command.ExecuteReader();
+        while (reader.Read())
+        {
+            var procedure = new DatabaseProcedure();
+            procedure.Name = reader.GetString(0);
+			procedure.SortOrder = reader.GetInt32(1);
+			procedure.Type=reader.GetString(2);
+			procedure.ProcedureName = reader.GetString(3);
+			procedure.Schema = reader.GetString(4);
+			procedure.IsOutput=reader.GetBoolean(5);
+			procedure.SqlDbType = reader.GetString(6);
+			procedure.ResultSet = GetProcedureResults(connectionString,schema, procedure.ProcedureName);
+
+			procedures.Add(procedure);
+        }
+    }
+
+    return procedures.GroupBy(t => t.ProcedureName);
+}
+
+public static List<DatabaseProcedureResult> GetProcedureResults(string connectionString,string schema, string procedurename)
+{
+	string sql=@"SELECT 
+	name, 
+	column_ordinal AS SortOrder,
+	case type_name(r.system_type_id)
+		when 'nvarchar' then 'string'
+		when 'int' then 'int'
+		when 'smallint' then 'Int16'
+		when 'bit' then 'bool'
+		when 'date' then 'DateTime'
+		when 'bigint' then 'long'
+		when 'time' then 'TimeSpan'
+		when 'smalldatetime' then 'DateTime'
+		when 'datetime' then 'DateTime'
+		when 'varchar' then 'string'
+		when 'nchar' then 'string'
+		when 'char' then 'string'
+		when 'numeric' then 'decimal'
+		when 'varbinary' then 'byte[]'
+		else type_name(r.system_type_id)
+	end
+	+
+	case ISNULL(r.IS_NULLABLE,0)
+		when 1 then
+			case type_name(r.system_type_id)
+				when 'nvarchar' then ''
+				when 'varchar' then ''
+				when 'nchar' then ''
+				when 'char' then ''
+				when 'varbinary' then ''
+				else '?'
+			END
+        ELSE ''
+	end
+	as [type],
+	CASE
+		WHEN r.max_length > 0 THEN  
+			CAST(case type_name(r.system_type_id)
+				when 'nvarchar' then CASE WHEN r.max_length > 0 THEN r.max_length/2 ELSE NULL end
+				when 'varchar' then CASE WHEN r.max_length > 0 THEN r.max_length ELSE NULL end
+				when 'nchar' then CASE WHEN r.max_length > 0 THEN r.max_length/2 ELSE NULL end
+				else null
+			END AS INT) 
+		else NULL
+    END AS MaxCharacterLength,
+	r.error_message as ErrorMessage
+FROM 
+	sys.dm_exec_describe_first_result_set('Exec " + schema + "." + procedurename + "', NULL, 1) AS r WHERE (ISNULL(r.is_hidden,1) = 0 or r.error_message is not null)";
+
+    var procedureresults = new List<DatabaseProcedureResult>();
+    using (SqlConnection sqlConnection = new SqlConnection(connectionString))
+    {
+        SqlCommand command = new SqlCommand(sql, sqlConnection);
+		
+        sqlConnection.Open();
+
+        var reader = command.ExecuteReader();
+        while (reader.Read())
+        {
+            var procedureresult = new DatabaseProcedureResult();
+            if (!reader.IsDBNull(0))
+			{
+				procedureresult.Name = reader.GetString(0);
+			}
+			if (!reader.IsDBNull(1))
+			{
+				procedureresult.SortOrder = reader.GetInt32(1);
+			}
+			else
+			{
+				procedureresult.SortOrder = 0;
+			}
+			if (!reader.IsDBNull(2))
+			{
+				procedureresult.Type = reader.GetString(2);
+			}
+			if(!reader.IsDBNull(3))
+			{
+				procedureresult.MaxCharacterLength=reader.GetInt32(3);
+			}
+			if (!reader.IsDBNull(4))
+			{
+				procedureresult.ErrorMessage = reader.GetString(4);
+			}
+			procedureresults.Add(procedureresult);
+        }
+    }
+
+    return procedureresults;
+}
+
+public class DatabaseProcedure
+{
+    public string Name { get; set; }
+    public string ProcedureName { get; set; }
+    public string Schema { get; set; }
+	public string Type { get; set; }
+	public int SortOrder {get;set;}
+	public bool IsOutput{get;set;}
+	public string SqlDbType { get; set; }
+	public List<DatabaseProcedureResult> ResultSet {get;set;}
+	public string ErrorMessage {get { return ResultSet.Any(x => x.ErrorMessage != null) ? string.Join(" ",ResultSet.Where(x => x.ErrorMessage != null).Select(x => x.ErrorMessage)) : null; }}
+}
+
+public class DatabaseProcedureResult
+{
+	public string Name { get; set; }
+    public string Type { get; set; }
+	public int SortOrder {get;set;}
+	public int? MaxCharacterLength {get;set;}
+	public string ErrorMessage{get;set;}
+}
+
+#>
