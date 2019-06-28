@@ -4,7 +4,7 @@
 <#@ import namespace="System.Linq" #>
 <#@ import namespace="System.Text" #>
 <#@ import namespace="System.Collections.Generic" #>
-<#@ include file="MultipleOutputHelper.ttinclude"#>
+<#@ include file="includes/MultipleOutputHelper.ttinclude"#>
 <#@ assembly name="System.Data" #>
 <#@ import namespace="System.Data.SqlClient" #>
 <#@include file="includes/StringHelper.ttinclude"#>
@@ -19,14 +19,25 @@
 <#	
 	EnglishPluralizationService pluralizationService = new EnglishPluralizationService();
 
-	
+    var path=Path.GetDirectoryName(Host.TemplateFile);
+    if(!System.IO.Directory.Exists(path + "/../" + modelsFolder))
+    {
+        System.IO.Directory.CreateDirectory(path + "/../" + modelsFolder);
+	}    
+
+
+    if(!System.IO.Directory.Exists(path + "/../" + contextFolder))
+    {
+        System.IO.Directory.CreateDirectory(path + "/../" + contextFolder);
+	}
+
 	var views= GetViews(connectionString,schemaName);
 	foreach(var view in views)
 	{
 		string pluralName=pluralizationService.Pluralize(view.Key);
 		string singularName=pluralizationService.Singularize(view.Key);
         
-		manager.StartNewFile("../" + modelName + "/" + singularName + "Model.generated.cs");
+		manager.StartNewFile("../" + modelsFolder + "/" + singularName + "Model.generated.cs");
 		#>
 using System;
 using System.Collections.Generic;
@@ -35,7 +46,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 using System.Diagnostics.CodeAnalysis;
 using System.Text;
 
-namespace <#=namespaceString#>.<#=modelName#>
+namespace <#=modelsnamespaceString#>
 {
     [ExcludeFromCodeCoverage]
     public partial class <#=singularName#>Model
@@ -81,7 +92,7 @@ foreach(var col in view)
 		string pluralName=pluralizationService.Pluralize(procedure.Key);
 		string singularName=pluralizationService.Singularize(procedure.Key);
 
-		manager.StartNewFile("../" + modelName+ "/" + singularName + "ResultModel.generated.cs");
+		manager.StartNewFile("../" + modelsFolder+ "/" + singularName + "ResultModel.generated.cs");
 		#>
 using System;
 using System.Collections.Generic;
@@ -90,7 +101,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 using System.Text;
 using System.Diagnostics.CodeAnalysis;
 
-namespace <#=namespaceString#>.<#=modelName#>
+namespace <#=modelsnamespaceString#>
 {
 	[ExcludeFromCodeCoverage]
     public partial class <#=singularName#>ResultModel
@@ -133,9 +144,9 @@ foreach(var col in procedure.First().ResultSet)
 
 
 
-<#manager.StartNewFile("../" + contextName + ".generated.cs");#>
+<#manager.StartNewFile("../" + contextFolder + "/" + contextName + ".generated.cs");#>
 using Microsoft.EntityFrameworkCore;
-using <#=namespaceString#>.Data.Models;
+using <#=modelsnamespaceString#>;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Collections.Generic;
@@ -254,11 +265,10 @@ foreach(var view in views)
 		string pluralName=pluralizationService.Pluralize(view.Key);
 		string singularName=pluralizationService.Singularize(view.Key);
 
-		manager.StartNewFile("../../" + modelName + "/" + singularName + ".generated.cs");
+		manager.StartNewFile("../" + modelsFolder + "/" + singularName + ".generated.cs");
 		#>
-using <#=namespaceString#>.Data.Models;
 
-namespace <#=modelnamespaceString#>
+namespace <#=modelsnamespaceString#>
 {
     public partial class <#=singularName#> : <#=singularName#>Model
     {
@@ -277,11 +287,11 @@ foreach(var procedure in procedures.Where(x => x.First().ResultSet.Where(rs => r
 		string pluralName=pluralizationService.Pluralize(procedure.Key);
 		string singularName=pluralizationService.Singularize(procedure.Key);
 
-		manager.StartNewFile("../../" + modelName + "/" + singularName + "Result.generated.cs");
+		manager.StartNewFile("../" + modelsFolder + "/" + singularName + "Result.generated.cs");
 		#>
 using <#=namespaceString#>.Data.Models;
 
-namespace <#=modelnamespaceString#>
+namespace <#=modelsnamespaceString#>
 {
     public partial class <#=singularName#>Result : <#=singularName#>ResultModel
     {
@@ -297,8 +307,8 @@ namespace <#=modelnamespaceString#>
 
 <#manager.StartNewFile("../../Profiles/DefaultProfile.generated.cs");#>
 using AutoMapper;
-using <#=modelnamespaceString#>;
-using <#=namespaceString#>.Models;
+using <#=modelsnamespaceString#>;
+
 
 namespace <#=automappernamespace#>
 {
