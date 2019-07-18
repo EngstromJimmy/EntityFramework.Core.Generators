@@ -38,7 +38,10 @@ public static IEnumerable<IGrouping<string,DatabaseView>> GetViews(string connec
 	table_schema,
 	column_name,
 	character_maximum_length,
-	CASE WHEN indexes.indexcount > 0 THEN CAST(1 AS BIT) ELSE CAST(0 AS BIT) END AS HasIndex
+	CASE WHEN indexes.indexcount > 0 THEN CAST(1 AS BIT) ELSE CAST(0 AS BIT) END AS HasIndex,
+	numeric_precision,
+	numeric_scale,
+	data_type
     from information_schema.columns i
     CROSS APPLY
         (SELECT table_schema + '.' + table_name) AS strings(fulltable)
@@ -68,6 +71,17 @@ public static IEnumerable<IGrouping<string,DatabaseView>> GetViews(string connec
 				view.MaxCharacterLength=reader.GetInt32(4);
 			}
 			view.HasIndex=reader.GetBoolean(5);
+
+			if(!reader.IsDBNull(6))
+			{
+				view.Precision =reader.GetByte(6);
+			}
+			if(!reader.IsDBNull(7))
+			{
+				view.Scale=reader.GetInt32(7);
+			}
+			view.DataType = reader.GetString(8);
+
             views.Add(view);
         }
     }
@@ -82,6 +96,9 @@ public class DatabaseView
 	public string Type { get; set; }
 	public int MaxCharacterLength { get; set; }
 	public bool HasIndex { get; set; }
+	public Int16 Precision  { get; set; }
+	public int Scale { get; set; }
+	public string DataType { get; set; }
 }
 
 #>

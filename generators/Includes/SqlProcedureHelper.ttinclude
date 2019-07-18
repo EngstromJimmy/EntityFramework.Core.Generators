@@ -20,6 +20,7 @@ public static IEnumerable<IGrouping<string,DatabaseProcedure>> GetProcedures(str
 		when 'numeric' then 'decimal'
 		when 'smallint' then 'Int16'
 		when 'uniqueidentifier' then 'Guid'
+		when 'varbinary' then 'byte[]'
 		else type_name(pa.user_type_id)
 	end
 	+
@@ -28,6 +29,7 @@ public static IEnumerable<IGrouping<string,DatabaseProcedure>> GetProcedures(str
 				when 'nvarchar' then ''
 				when 'varchar' then ''
 				when 'nchar' then ''
+				when 'varbinary' then ''
 				when 'char' then ''
 				else '?'
 			end

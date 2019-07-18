@@ -119,6 +119,13 @@ foreach(var col in procedure.First().ResultSet)
 <#
 	}
 
+	/*if(col.Scale>0 && col.Precision>0)
+	{
+	#>
+		[Column(TypeName = "<#=col.DataType#>(<#=col.Precision#>, <#=col.Scale#>)")]
+	<#
+	}*/
+
 	//We are assuming that the first column in the view is the primary key
 	if(first)
 	{					
@@ -289,7 +296,6 @@ foreach(var procedure in procedures.Where(x => x.First().ResultSet.Where(rs => r
 
 		manager.StartNewFile("../" + modelsFolder + "/" + singularName + "Result.generated.cs");
 		#>
-using <#=namespaceString#>.Data.Models;
 
 namespace <#=modelsnamespaceString#>
 {
@@ -305,7 +311,7 @@ namespace <#=modelsnamespaceString#>
 #>
 <#if (generateAutoMapperDefaultProfile){#>
 
-<#manager.StartNewFile("../../Profiles/DefaultProfile.generated.cs");#>
+<#manager.StartNewFile("../Profiles/DefaultProfile.generated.cs");#>
 using AutoMapper;
 using <#=modelsnamespaceString#>;
 
