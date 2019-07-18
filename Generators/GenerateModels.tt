@@ -62,6 +62,12 @@ foreach(var col in view)
 		[MaxLength(<#=col.MaxCharacterLength#>)]
 <#
 	}
+	if(col.Scale>0 && col.Precision>0)
+	{
+	#>
+		[Column(TypeName = "<#=col.DataType#>(<#=col.Precision#>, <#=col.Scale#>)")]
+	<#
+	}
 
 	//We are assuming that the first column in the view is the primary key
 	if(first)
@@ -116,15 +122,14 @@ foreach(var col in procedure.First().ResultSet)
 	{
 	#>
 		[MaxLength(<#=col.MaxCharacterLength#>)]
-<#
+	<#
 	}
-
-	/*if(col.Scale>0 && col.Precision>0)
+	if(col.Scale>0 && col.Precision>0)
 	{
 	#>
 		[Column(TypeName = "<#=col.DataType#>(<#=col.Precision#>, <#=col.Scale#>)")]
 	<#
-	}*/
+	}
 
 	//We are assuming that the first column in the view is the primary key
 	if(first)
