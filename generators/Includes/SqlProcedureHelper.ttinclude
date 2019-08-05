@@ -14,6 +14,7 @@ public static IEnumerable<IGrouping<string,DatabaseProcedure>> GetProcedures(str
 		when 'bigint' then 'long'
 		when 'smalldatetime' then 'DateTime'
 		when 'datetime' then 'DateTime'
+		when 'datetime2' then 'DateTime'
 		when 'varchar' then 'string'
 		when 'nchar' then 'string'
 		when 'char' then 'string'
@@ -51,6 +52,7 @@ public static IEnumerable<IGrouping<string,DatabaseProcedure>> GetProcedures(str
 		when 'char' then 'SqlString'
 		when 'numeric' then 'SqlDecimal'
 		when 'decimal' then 'SqlDecimal'
+		when 'varbinary' then 'SqlBinary'
 		else type_name(pa.user_type_id)
 	END AS SqlDbType
 FROM sys.procedures p
@@ -137,7 +139,10 @@ public static List<DatabaseProcedureResult> GetProcedureResults(string connectio
 			END AS INT) 
 		else NULL
     END AS MaxCharacterLength,
-	r.error_message as ErrorMessage
+	r.error_message as ErrorMessage,
+	precision,
+	scale,
+	type_name(r.system_type_id) as DataType
 FROM 
 	sys.dm_exec_describe_first_result_set('Exec " + schema + "." + procedurename + "', NULL, 1) AS r WHERE (ISNULL(r.is_hidden,1) = 0 or r.error_message is not null)";
 
@@ -176,7 +181,22 @@ FROM
 			{
 				procedureresult.ErrorMessage = reader.GetString(4);
 			}
-			procedureresults.Add(procedureresult);
+			if (!reader.IsDBNull(5))
+			{
+				procedureresult.Precision = reader.GetByte(5);
+			}
+			if (!reader.IsDBNull(6))
+			{
+				procedureresult.Scale = reader.GetByte(6);
+			}
+			if (!reader.IsDBNull(7))
+			{
+			procedureresult.DataType = reader.GetString(7);
+			}
+			if (procedureresult.Name != null)
+			{
+				procedureresults.Add(procedureresult);
+			}
         }
     }
 
@@ -194,6 +214,7 @@ public class DatabaseProcedure
 	public string SqlDbType { get; set; }
 	public List<DatabaseProcedureResult> ResultSet {get;set;}
 	public string ErrorMessage {get { return ResultSet.Any(x => x.ErrorMessage != null) ? string.Join(" ",ResultSet.Where(x => x.ErrorMessage != null).Select(x => x.ErrorMessage)) : null; }}
+
 }
 
 public class DatabaseProcedureResult
@@ -203,6 +224,9 @@ public class DatabaseProcedureResult
 	public int SortOrder {get;set;}
 	public int? MaxCharacterLength {get;set;}
 	public string ErrorMessage{get;set;}
+	public int Precision {get;set;}
+	public int Scale{get;set;}
+	public string DataType{get;set;}
 }
 
 #>

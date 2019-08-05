@@ -62,7 +62,7 @@ foreach(var col in view)
 		[MaxLength(<#=col.MaxCharacterLength#>)]
 <#
 	}
-	if(col.Scale>0 && col.Precision>0)
+	if(col.DataType=="decimal")
 	{
 	#>
 		[Column(TypeName = "<#=col.DataType#>(<#=col.Precision#>, <#=col.Scale#>)")]
@@ -124,7 +124,7 @@ foreach(var col in procedure.First().ResultSet)
 		[MaxLength(<#=col.MaxCharacterLength#>)]
 	<#
 	}
-	if(col.Scale>0 && col.Precision>0)
+	if(col.DataType=="decimal")
 	{
 	#>
 		[Column(TypeName = "<#=col.DataType#>(<#=col.Precision#>, <#=col.Scale#>)")]
@@ -204,26 +204,20 @@ namespace <#=namespaceString#>
 		public async Task <#=procedure.Key#>(<#=string.Join(", ", procedure.Select(x => x.Type + " " + FirstCharacterToLower(x.Name.Replace("@",""))))#>)
 <#}#>
 		{
-<# if (procedure.Any(p => p.IsOutput))
-{#>
+
 			var sqlparameters = new List<SqlParameter>();
 			
 <# foreach(var p in procedure)
 {#>
 <#if (p.IsOutput) {#>
-			   sqlparameters.Add(new SqlParameter("<#=p.Name#>", SqlDbType.Int) {Direction = ParameterDirection.Output});
+		    sqlparameters.Add(new SqlParameter("<#=p.Name#>", SqlDbType.Int) {Direction = ParameterDirection.Output});
 <#}else{#>
-			   sqlparameters.Add(new SqlParameter("<#=p.Name#>", <#=FirstCharacterToLower(p.Name.Replace("@",""))#> ?? <#=p.SqlDbType#>.Null));
+		    sqlparameters.Add(new SqlParameter("<#=p.Name#>", <#=FirstCharacterToLower(p.Name.Replace("@",""))#> ?? <#=p.SqlDbType#>.Null));
 <#}#>
 <#}#>
-			
-<#}#>
-<# if (procedure.Any(p => p.IsOutput))
-{#>			 
+	 
 			await this.Database.ExecuteSqlCommandAsync("Exec <#=procedure.First().Schema#>.<#=procedure.Key#> <#=string.Join(", ", procedure.Select(x => x.Name + (x.IsOutput ? " OUTPUT" : "")))#>", sqlparameters);
-<#}else{#>
-			await this.Database.ExecuteSqlCommandAsync($@"Exec <#=procedure.First().Schema#>.<#=procedure.Key#> <#=string.Join(", ", procedure.Where(x => !x.IsOutput).Select(x => x.Name + "={" + FirstCharacterToLower(x.Name.Replace("@",""))+"}"))#>");		
-<#}#>			
+		
 <# if (procedure.Any(p => p.IsOutput))
 {#>
 			var result = int.Parse(sqlparameters[<#=procedure.First(p => p.IsOutput).SortOrder-1#>].Value.ToString());
