@@ -1,4 +1,4 @@
-﻿<#@ assembly name="System.Core" #>
+<#@ assembly name="System.Core" #>
 <#@ import namespace="System.Linq" #>
 <#@ import namespace="System.Text" #>
 <#@ import namespace="System.Collections.Generic" #>
@@ -8,7 +8,6 @@
 
 
 <#+
-
 //---------------------------------------------------------------------
 // <copyright file="PluralizationServiceUtil.cs" company="Microsoft">
 //      Copyright (c) Microsoft Corporation.  All rights reserved.
@@ -433,7 +432,7 @@
         private Dictionary<string, string> _wordsEndingWithSeDictionary =
             new Dictionary<string, string>()
             {
-                {"house", "houses"}, {"case", "cases"}, {"enterprise", "enterprises"},
+				{"house", "houses"}, {"case", "cases"}, {"enterprise", "enterprises"},
                 {"purchase", "purchases"}, {"surprise", "surprises"}, {"release", "releases"},
                 {"disease", "diseases"}, {"promise", "promises"}, {"refuse", "refuses"},
                 {"whose", "whoses"}, {"phase", "phases"}, {"noise", "noises"},
@@ -448,7 +447,7 @@
                 {"fuse", "fuses"}, {"muse", "muses"},
                 {"slaughterhouse", "slaughterhouses"}, {"clearinghouse", "clearinghouses"},
                 {"endonuclease", "endonucleases"}, {"steeplechase", "steeplechases"},
-                {"metamorphose", "metamorphoses"}, {"----", "----s"},
+                {"metamorphose", "metamorphoses"}, {"expense","expenses"}, {"----", "----s"},
                 {"commonsense", "commonsenses"}, {"intersperse", "intersperses"},
                 {"merchandise", "merchandises"}, {"phosphatase", "phosphatases"},
                 {"summerhouse", "summerhouses"}, {"watercourse", "watercourses"},
