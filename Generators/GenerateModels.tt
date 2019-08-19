@@ -1,4 +1,4 @@
-﻿<#@ template language="C#" hostspecific="True"#>
+<#@ template language="C#" hostspecific="True"#>
 <#@ Assembly Name="System.Core, Version=4.0.0.0, Culture=neutral" #>
 <#@ Assembly Name="Microsoft.CSharp, Version=4.0.0.0, Culture=neutral" #>
 <#@ import namespace="System.Linq" #>
@@ -252,11 +252,19 @@ string pluralName=pluralizationService.Pluralize(view.Key);
 string singularName=pluralizationService.Singularize(view.Key);
 
 #>
+<#if(view.First().TableType=="BASE TABLE"){#>
+<#if(IncludeTables){#>
+public virtual DbSet<<#=singularName#>Model> <#=pluralName#> { get; private set; }
+<#}#>
+<#}
+else
+{
+#>
 		public virtual DbQuery<<#=singularName#>Model> <#=pluralName#> { get; private set; }
 <#if(view.First().HasIndex){#>
 		public IQueryable<<#=singularName#>Model> <#=view.Key#>NoExpand { get { return <#=pluralName#>.FromSql("Select * from <#=schemaName#>.<#=view.Key#> with (noexpand)"); } } 	
 <#}#>
-
+<#}#>
 <#}#>
 
     }
