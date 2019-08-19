@@ -10,6 +10,8 @@
 	
 	string modelsFolder= "Models";
     string contextFolder= "Data";
+    
+    bool IncludeTables=true;
 
 	//===== Automapper setting =====
 	//This will generate a class inheriting from the database model class and also generate default profiles for Automapper
