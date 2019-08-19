@@ -183,7 +183,14 @@ namespace <#=namespaceString#>
 	{
 		string pluralName=pluralizationService.Pluralize(view.Key);
 		string singularName=pluralizationService.Singularize(view.Key);#>
+		<#if(view.First().TableType=="VIEW"){#>
 			modelBuilder.Query<<#=singularName#>Model>().ToView("<#=view.Key#>","<#=schemaName#>");
+		<#}
+		else
+		{
+		#>
+		modelBuilder.Entity<<#=singularName#>Model>().ToTable("<#=view.Key#>","<#=schemaName#>");
+		<#}#>
 <#}#>
 }
 
