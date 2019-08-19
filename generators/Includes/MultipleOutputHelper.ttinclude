@@ -1,4 +1,4 @@
-﻿<#@ Assembly Name="System.Core, Version=4.0.0.0, Culture=neutral" #>
+<#@ Assembly Name="System.Core, Version=4.0.0.0, Culture=neutral" #>
 <#@ Assembly Name="Microsoft.CSharp, Version=4.0.0.0, Culture=neutral" #>
 <#@ assembly name="System.Data.Linq"
 #><#@ assembly name="EnvDTE"
