@@ -1,4 +1,4 @@
-﻿<#+
+<#+
 
 public static IEnumerable<IGrouping<string,DatabaseProcedure>> GetProcedures(string connectionString,string schema)
 {
@@ -53,6 +53,7 @@ public static IEnumerable<IGrouping<string,DatabaseProcedure>> GetProcedures(str
 		when 'numeric' then 'SqlDecimal'
 		when 'decimal' then 'SqlDecimal'
 		when 'varbinary' then 'SqlBinary'
+		when 'uniqueidentifier' then 'SqlGuid'
 		else type_name(pa.user_type_id)
 	END AS SqlDbType
 FROM sys.procedures p
