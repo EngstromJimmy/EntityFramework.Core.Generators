@@ -1,4 +1,4 @@
-﻿<#+
+<#+
 public static string FirstCharacterToLower(string str)
 {
     if (String.IsNullOrEmpty(str) || Char.IsLower(str, 0))
