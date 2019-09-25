@@ -240,7 +240,7 @@ namespace <#=namespaceString#>
 #>
 		public async Task<List<<#=singularName#>ResultModel>> <#=procedure.Key#>(<#=string.Join(", ", procedure.Select(x => x.Type + " " + FirstCharacterToLower(x.Name.Replace("@",""))))#>)
 		{
-			return await this.<#=singularName#>Results.FromSql($@"Exec <#=procedure.First().Schema#>.<#=procedure.Key#> <#=string.Join(", ", procedure.Select(x => x.Name + "={" + FirstCharacterToLower(x.Name.Replace("@",""))+"}"))#>").ToListAsync();
+			return await this.<#=singularName#>Results.FromSqlInterpolated($@"Exec <#=procedure.First().Schema#>.<#=procedure.Key#> <#=string.Join(", ", procedure.Select(x => x.Name + "={" + FirstCharacterToLower(x.Name.Replace("@",""))+"}"))#>").ToListAsync();
 		}
 								
 <#}#>
