@@ -10,6 +10,7 @@
 	
 	string modelsFolder= "Models";
     string contextFolder= "Data";
+    string profilesFolder="Profiles";
     
     bool IncludeTables=true;
 
