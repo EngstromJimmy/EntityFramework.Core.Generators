@@ -4,13 +4,13 @@
 <#@ import namespace="System.Linq" #>
 <#@ import namespace="System.Text" #>
 <#@ import namespace="System.Collections.Generic" #>
-<#@ include file="includes/MultipleOutputHelper.ttinclude"#>
+<#@ include file="../includes/MultipleOutputHelper.ttinclude"#>
 <#@ assembly name="System.Data" #>
 <#@ import namespace="System.Data.SqlClient" #>
-<#@include file="includes/StringHelper.ttinclude"#>
-<#@include file="includes/SqlViewHelper.ttinclude"#>
-<#@include file="includes/SqlProcedureHelper.ttinclude"#>
-<#@include file="includes/EntityFrameworkCorePluralize.ttinclude"#>
+<#@include file="../includes/StringHelper.ttinclude"#>
+<#@include file="../includes/SqlViewHelper.ttinclude"#>
+<#@include file="../includes/SqlProcedureHelper.ttinclude"#>
+<#@include file="../includes/EntityFrameworkCorePluralize.ttinclude"#>
 <#@include file="Settings.ttinclude"#>
 <#@ assembly name="System.Configuration" #>
 <#@ import namespace="System.Configuration" #>
@@ -162,7 +162,7 @@ using <#=modelsnamespaceString#>;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Collections.Generic;
-using System.Data.SqlClient;
+using Microsoft.Data.SqlClient;
 using System.Data;
 using System.Data.SqlTypes;
 using System;
@@ -325,20 +325,20 @@ namespace <#=modelsnamespaceString#>
 #>
 <#if (generateAutoMapperDefaultProfile){#>
 
-<#manager.StartNewFile("../Profiles/DefaultProfile.generated.cs");#>
+<#manager.StartNewFile("../" + profilesFolder + "/" + contextName + "DefaultProfile.generated.cs");#>
 using AutoMapper;
 using <#=modelsnamespaceString#>;
 
 
 namespace <#=automappernamespace#>
 {
-    public class <#=schemaName#>DefaultAutoMapperProfileConfiguration : Profile
+    public class <#=schemaName#><#=contextName#>DefaultAutoMapperProfileConfiguration : Profile
     {
 
-		public <#=schemaName#>DefaultAutoMapperProfileConfiguration() : this("<#=schemaName#>DefaultAutoMapperProfile")
+		public <#=schemaName#><#=contextName#>DefaultAutoMapperProfileConfiguration() : this("<#=schemaName#>DefaultAutoMapperProfile")
         {}
 
-		private <#=schemaName#>DefaultAutoMapperProfileConfiguration(string profileName) : base(profileName)
+		private <#=schemaName#><#=contextName#>DefaultAutoMapperProfileConfiguration(string profileName) : base(profileName)
         {
 			///VIEWMAPPINGS
 <#
